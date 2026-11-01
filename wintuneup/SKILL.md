@@ -33,7 +33,7 @@ These are plain instructions and scripts. the agent, Codex, ChatGPT agents, and 
 |---|---|
 | Baseline / final numbers | `powershell -ExecutionPolicy Bypass -File <skill-folder>\measure.ps1 -Inventory` (`-Now` skips the 30 s settle) |
 | Heat, throttle, and temperature | `powershell -ExecutionPolicy Bypass -File <skill-folder>\thermal.ps1` (`-Setup` once for sensors) |
-| Every GB on a drive | `powershell -ExecutionPolicy Bypass -File <skill-folder>\disksweep.ps1 C:` (run elevated, takes minutes) |
+| Every GB on a drive | `powershell -ExecutionPolicy Bypass -File <skill-folder>\disksweep.ps1` (all drives, run elevated, takes minutes) |
 | Network analysis | `<skill-folder>\network.ps1` (`-NoSpeed` to skip transfers) |
 | Full diagnostic scan | `powershell -ExecutionPolicy Bypass -File <skill-folder>\scan.ps1` (~60 s) |
 | Parser self-check | `powershell -ExecutionPolicy Bypass -File <skill-folder>\test-parse.ps1` |
@@ -269,7 +269,9 @@ Heat and thermal limits hide from Task Manager. Read them yourself. Never ask th
 
 Folder tools miss hidden NTFS data. Do not stop at a list of large folders.
 
-- **Run `disksweep.ps1 <drive>` elevated, one drive at a time.** It prints the NTFS allocation report and then folders and files over 5 GB.
+- **Run `disksweep.ps1` elevated, with no drive named.** It sweeps every connected drive, one at a time. It prints the NTFS allocation report and then folders and files over 5 GB.
+- **Show every connected drive.** Include internal, USB, and network drives, not only the fullest two. Say if a known drive is not connected.
+- **Rank each drive's contents.** In `space.drives[].parts`, list the top 10 or so items as `{ "l", "n", "gb", "s" }`, where `n` is a short detail such as "6 titles over 20 GB". Never show only a bar.
 - **Reconcile.** Allocated space must equal system files + System Volume Information + user files. Name any gap.
 - **`$Txf` over 1 GB is a finding.** These are NTFS transaction files, and folder tools cannot see them.
   - Fix: `fsutil resource setautoreset true C:\`. Space frees at the next reboot, so say the real gain is unknown until then.
@@ -379,7 +381,7 @@ The page puts `vitals`, `offers`, `findings`, and `space` first. Network, market
 2. **`vitals`:** CPU heat, CPU speed, memory, main disk, internet, background load. Measured values only.
 3. **`spec`:** model, CPU, GPU, memory, OS, storage, uptime.
 4. **`market`:** how good this machine is today. See *Market check*.
-5. **`space`:** each drive as a bar and the largest items, each with the offer that goes with it.
+5. **`space`:** every connected drive with a ranked list of its largest items. `items` holds only the ones with an offer.
 6. **`network`:** the hops in order, then speed, Wi-Fi, DNS, loss, tunnels, and open remote access.
 7. **`findings`:** ordered by severity, 3 bullets at most: what, evidence, cost.
 8. **`results`:** only after a change. Keep rows that did not improve.

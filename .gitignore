@@ -1,0 +1,10 @@
+# One machine's data stays out of the repo.
+reports/
+.claude/
+*.zip
+wintuneup/apply.ps1
+mactuneup/apply.sh
+mactuneup/apply-root.sh
+mactuneup/thin-snapshots.sh
+*.bak*
+nul

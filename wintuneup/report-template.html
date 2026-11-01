@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Machine Health Report</title>
+<style>
+/* Layout: one column of collapsible sections. The summary and the actions come first. */
+:root {
+  --bg:#F5F7F8; --card:#FFFFFF; --soft:#EFF2F4; --ink:#17212B; --ink2:#55646F; --line:#DDE3E7;
+  --accent:#1F6F8B; --accent-soft:#E2F0F4; --warn:#B7791F; --warn-soft:#FBF1DD; --hot:#C2402F; --hot-soft:#FBE7E4;
+  --good:#2B7F5D; --good-soft:#E1F3EB; --body:#FFFFFF; --face:#17212B;
+  --text:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#12181D; --card:#1A2229; --soft:#222C34; --ink:#E8EDF0; --ink2:#A2AFB8; --line:#2F3B44;
+  --accent:#6DBBD3; --accent-soft:#1D3640; --warn:#E3B04F; --warn-soft:#3A2F17; --hot:#F08A7B; --hot-soft:#43231F;
+  --good:#6CCBA3; --good-soft:#1B3A2D; --body:#E8EDF0; --face:#17212B; color-scheme:dark } }
+:root[data-theme="dark"] {
+  --bg:#12181D; --card:#1A2229; --soft:#222C34; --ink:#E8EDF0; --ink2:#A2AFB8; --line:#2F3B44;
+  --accent:#6DBBD3; --accent-soft:#1D3640; --warn:#E3B04F; --warn-soft:#3A2F17; --hot:#F08A7B; --hot-soft:#43231F;
+  --good:#6CCBA3; --good-soft:#1B3A2D; --body:#E8EDF0; --face:#17212B; color-scheme:dark }
+* { box-sizing:border-box }
+html { scroll-behavior:smooth; scroll-padding-top:3.2rem }
+body { margin:0; background:var(--bg); color:var(--ink); font:14.5px/1.5 var(--text) }
+.wrap { max-width:62rem; margin:0 auto; padding-block:1.25rem 2.5rem;
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex; flex-direction:column; gap:.7rem }
+h1,h2,h3,p { margin:0 } h1 { font-size:clamp(1.35rem,3.5vw,1.8rem); line-height:1.2; font-weight:650; text-wrap:balance }
+h3 { font-size:.92rem; font-weight:620 }
+ul { margin:0; padding-left:1.05rem } li { margin:.14rem 0; color:var(--ink2) } li b { color:var(--ink) }
+.head { display:flex; flex-wrap:wrap; gap:.9rem; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:1rem 1.1rem }
+.mascot { flex:0 0 auto; width:48px; height:46px }
+.say { flex:1 1 18rem; min-width:0; display:flex; flex-direction:column; gap:.25rem } .say p { color:var(--ink2) }
+.eyebrow { font:.72rem var(--mono); color:var(--ink2) }
+.score { flex:0 0 auto; text-align:center } .score b { display:block; font:650 1.7rem var(--text); color:var(--c); font-variant-numeric:tabular-nums } .score span { font:.68rem var(--mono); color:var(--ink2); white-space:nowrap }
+nav { position:sticky; top:env(safe-area-inset-top,0px); z-index:5; display:flex; flex-wrap:wrap; gap:.15rem .25rem; align-items:center; background:var(--bg); padding-block:.35rem }
+nav a { color:var(--ink2); text-decoration:none; font-size:.8rem; padding:.18rem .5rem; border-radius:6px; white-space:nowrap } nav a:hover { background:var(--soft); color:var(--ink) }
+button { font:.78rem var(--text); color:var(--accent); background:none; border:1px solid var(--line); border-radius:6px; padding:.18rem .55rem; cursor:pointer; margin-left:auto; white-space:nowrap }
+details { background:var(--card); border:1px solid var(--line); border-radius:12px; min-width:0 }
+summary { list-style:none; cursor:pointer; display:flex; flex-wrap:wrap; align-items:center; gap:.2rem .6rem; padding:.7rem 1rem; font-weight:620 }
+summary::-webkit-details-marker { display:none } summary::before { content:"\25B8"; color:var(--ink2); font-size:.8rem } details[open] > summary::before { content:"\25BE" }
+summary small { font-weight:400; color:var(--ink2); font-size:.8rem } summary .pill { margin-left:auto }
+.body { padding:0 1rem .9rem; display:flex; flex-direction:column; gap:.7rem }
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px }
+.vitals { display:flex; flex-wrap:wrap; gap:.5rem } .vital { flex:1 1 9rem; min-width:0; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:.55rem .7rem; display:flex; flex-direction:column; gap:.14rem }
+.vital .k { font-size:.74rem; color:var(--ink2); white-space:nowrap } .vital .v { font-size:1.2rem; font-weight:650; font-variant-numeric:tabular-nums; white-space:nowrap } .vital .n { font-size:.72rem; color:var(--ink2) }
+.meter { height:4px; border-radius:4px; background:var(--soft); overflow:hidden } .meter span { display:block; height:100%; background:var(--c,var(--accent)) }
+.good{--c:var(--good);--s:var(--good-soft)} .warn{--c:var(--warn);--s:var(--warn-soft)} .hot{--c:var(--hot);--s:var(--hot-soft)} .info{--c:var(--accent);--s:var(--accent-soft)}
+.pill { display:inline-flex; font-size:.7rem; font-weight:600; padding:.08rem .45rem; border-radius:5px; background:var(--s,var(--soft)); color:var(--c,var(--ink2)); white-space:nowrap }
+.spec { display:flex; flex-wrap:wrap; gap:0 1.2rem; margin:0 } .spec div { flex:1 1 14rem; min-width:0; display:flex; justify-content:space-between; gap:.7rem; border-bottom:1px solid var(--soft); padding:.28rem 0 }
+.spec dt { color:var(--ink2); font-size:.82rem; white-space:nowrap } .spec dd { margin:0; font-size:.82rem; text-align:right; overflow-wrap:anywhere; min-width:0 }
+.tier { display:flex; gap:2px } .tier span { flex:1; height:6px; background:var(--soft) } .tier span.on { background:var(--accent) }
+.tiers { display:flex; justify-content:space-between; font-size:.68rem; color:var(--ink2); gap:.3rem }
+.drive { display:flex; flex-direction:column; gap:.25rem } .drive header { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem; font-size:.84rem }
+.stack { display:flex; height:10px; border-radius:5px; overflow:hidden; background:var(--soft); gap:1px } .stack span { background:var(--c,var(--accent)); min-width:2px } .stack .free { background:var(--good-soft) } .stack .other { background:var(--line) }
+.tags { display:flex; flex-wrap:wrap; gap:.25rem }
+.item { display:flex; flex-wrap:wrap; gap:.15rem .7rem; align-items:baseline; padding:.38rem 0; border-top:1px solid var(--soft) }
+.item .gb { flex:0 0 4.8rem; font-size:.82rem; font-weight:620; font-variant-numeric:tabular-nums } .item .what { flex:1 1 13rem; min-width:0 } .item .what small { display:block; color:var(--ink2); font:.74rem var(--mono); overflow-wrap:anywhere }
+.path { display:flex; flex-wrap:wrap; gap:.3rem } .hop { flex:1 1 7.5rem; min-width:0; background:var(--soft); border-radius:8px; padding:.45rem .6rem } .hop b { display:block; white-space:nowrap } .hop small { color:var(--ink2); font-size:.74rem; overflow-wrap:anywhere }
+.finding { border-left:3px solid var(--c,var(--line)); padding:.1rem 0 .1rem .7rem; display:flex; flex-direction:column; gap:.2rem } .finding header { display:flex; flex-wrap:wrap; gap:.45rem; align-items:center }
+.offer { display:flex; gap:.6rem; align-items:baseline; padding:.45rem 0; border-top:1px solid var(--soft) } .offer:first-child { border:0 } .offer .n { flex:0 0 1.2rem; font-weight:650; color:var(--accent); font-variant-numeric:tabular-nums } .offer > div { flex:1; min-width:0; display:flex; flex-direction:column; gap:.14rem } .offer p { color:var(--ink2) }
+table { border-collapse:collapse; width:100%; font-size:.84rem } th,td { text-align:left; padding:.32rem .55rem; border-bottom:1px solid var(--soft) } th { font-size:.72rem; color:var(--ink2); font-weight:600 } .tw { overflow-x:auto }
+.foot { text-align:center; font-size:.76rem; color:var(--ink2) } a { color:var(--accent); overflow-wrap:anywhere }
+@media print { nav,button { display:none } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<!-- The agent replaces the JSON below with the real data. Do not edit the markup or the script. Delete a key to hide its section. -->
+<script id="report-data" type="application/json">
+{
+  "example": true,
+  "machine": { "kind": "laptop", "model": "Example Laptop 14", "date": "1 January 2030" },
+  "mood": "hot",
+  "score": 62,
+  "headline": "The CPU overheats at low power.",
+  "summary": "The CPU reaches its heat limit at low power, so every app feels slow. Cleaning the fans is the top job.",
+  "vitals": [
+    { "k": "CPU heat", "v": "99°C", "n": "at 55 W", "pct": 99, "s": "hot" },
+    { "k": "CPU speed", "v": "61%", "n": "boost starts at 100%", "pct": 61, "s": "warn" },
+    { "k": "Memory", "v": "54%", "n": "commit pressure", "pct": 54, "s": "good" },
+    { "k": "Main disk", "v": "94%", "n": "48 GB free", "pct": 94, "s": "hot" },
+    { "k": "Internet", "v": "120 Mbps", "n": "22 ms to the web", "pct": 70, "s": "good" },
+    { "k": "Background", "v": "412", "n": "processes", "pct": 45, "s": "info" }
+  ],
+  "spec": [ ["CPU","Example 8-core"],["GPU","Example GPU"],["Memory","32 GB"],["OS","Example OS 1.0"],["Storage","1 TB NVMe"],["Uptime","3 days"] ],
+  "market": {
+    "tier": 3, "tiers": ["Basic","Everyday","Strong","High end","Top"],
+    "verdict": "Still strong in 2030 for everyday work and creative apps.",
+    "bullets": ["<b>Age:</b> launched 2027","<b>Used price:</b> about $700-$900 (seller listings, January 2030)","<b>Best upgrade:</b> a larger SSD. The CPU is still fine."],
+    "sources": [ { "t": "Example source", "u": "https://example.com" } ]
+  },
+  "space": {
+    "drives": [ { "name": "C:", "total": 1000, "free": 48, "note": "Fast internal disk",
+      "parts": [ { "l":"Apps", "gb":300 }, { "l":"Your files", "gb":450 }, { "l":"Hidden system", "gb":202, "s":"hot" } ] } ],
+    "items": [
+      { "gb":"80 GB", "what":"Hidden NTFS transaction files", "where":"$Txf", "tag":"Reset offered", "s":"good" },
+      { "gb":"60 GB", "what":"Old games", "where":"D:\\Games", "tag":"Move offered", "s":"info" }
+    ]
+  },
+  "network": {
+    "hops": [ { "b":"This PC", "s":"Wi-Fi 6, 1.2 Gbps link" }, { "b":"2 ms", "s":"Home router" }, { "b":"22 ms", "s":"The internet" } ],
+    "bullets": ["<b>Download:</b> 120 Mbps. <b>Upload:</b> 40 Mbps.","<b>DNS:</b> 0 of 20 lookups failed.","<b>Packet loss:</b> 0 of 20."]
+  },
+  "findings": [ { "s":"hot", "tag":"Heat", "t":"The CPU runs at its limit at low power", "b":["99°C at 55 W","Power limit only 40% used"] } ],
+  "cleared": [ { "t":"Memory", "b":"Commit is 54%. No process pile-up." } ],
+  "results": [ ["C: free","48 GB","128 GB","+80 GB"] ],
+  "offers": [ { "t":"Clean the fans", "b":"Most likely to bring the speed back.", "tags":["30 minutes","No admin"] } ],
+  "protected": "This checkup never deletes on its own. Every change is offered first, and you pick."
+}
+</script>
+<script>
+(function () {
+  "use strict";
+  var d = JSON.parse(document.getElementById("report-data").textContent);
+  var app = document.getElementById("app"), nav = [];
+  // Values are escaped. Only <b> survives, so bullets can stress a word.
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/&lt;(\/?)b&gt;/g,"<$1b>"); }
+  function pct(n) { return Math.max(0, Math.min(100, Number(n) || 0)); }
+  function add(html) { var t = document.createElement("template"); t.innerHTML = html; app.appendChild(t.content); }
+  function list(a) { return "<ul>" + (a || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"; }
+  function sect(id, title, note, open, body, badge) {
+    nav.push([id, title]);
+    return '<details id="' + id + '"' + (open ? " open" : "") + "><summary>" + esc(title) + (note ? " <small>" + esc(note) + "</small>" : "") + (badge || "") + '</summary><div class="body">' + body + "</div></details>";
+  }
+  function mascot(mood, kind) {
+    var mouth = { happy:'<path d="M70 92 Q80 104 90 92" fill="none" stroke="var(--face)" stroke-width="5" stroke-linecap="round"/>',
+      ok:'<path d="M71 95 L89 95" fill="none" stroke="var(--face)" stroke-width="5" stroke-linecap="round"/>',
+      hot:'<ellipse cx="80" cy="96" rx="8" ry="7" fill="var(--face)"/>',
+      sad:'<path d="M70 100 Q80 90 90 100" fill="none" stroke="var(--face)" stroke-width="5" stroke-linecap="round"/>' }[mood] || "";
+    var c = { happy:"var(--good)", ok:"var(--accent)", hot:"var(--hot)", sad:"var(--warn)" }[mood] || "var(--accent)";
+    var base = kind === "desktop" ? '<rect x="62" y="122" width="36" height="16" fill="' + c + '"/>' : '<rect x="18" y="124" width="124" height="14" rx="7" fill="' + c + '"/>';
+    return '<svg class="mascot" viewBox="10 22 140 120" role="img" aria-label="Status: ' + esc(mood) + '"><g><rect x="30" y="30" width="100" height="92" rx="16" fill="' + c + '"/><rect x="39" y="39" width="82" height="74" rx="10" fill="#FFFFFF"/><circle cx="62" cy="74" r="7" fill="var(--face)"/><circle cx="98" cy="74" r="7" fill="var(--face)"/>' + mouth + "</g>" + base + "</svg>";
+  }
+
+  var m = d.machine || {};
+  document.title = (m.model || "Machine") + " Health Report";
+  var sc = d.score != null ? pct(d.score) : null, ss = sc >= 80 ? "good" : sc >= 55 ? "warn" : "hot";
+  add('<header class="head">' + mascot(d.mood || "ok", m.kind) + '<div class="say"><div class="eyebrow">' + esc(m.model) + " · " + esc(m.date) + (d.example ? " · SAMPLE DATA" : "") + "</div><h1>" + esc(d.headline) + "</h1><p>" + esc(d.summary) + "</p></div>" + (sc != null ? '<div class="score ' + ss + '"><b>' + sc + "</b><span>health / 100</span></div>" : "") + "</header>");
+  add('<nav id="nav"></nav>');
+  if (d.vitals) add('<div class="vitals">' + d.vitals.map(function (v) { return '<div class="vital ' + esc(v.s) + '"><div class="k">' + esc(v.k) + '</div><div class="v">' + esc(v.v) + '</div><div class="meter"><span style="width:' + pct(v.pct) + '%"></span></div><div class="n">' + esc(v.n) + "</div></div>"; }).join("") + "</div>");
+
+  if (d.offers) add(sect("actions", "Recommended actions", "nothing changes until you pick", true, "<div>" + d.offers.map(function (o, i) { return '<div class="offer"><span class="n">' + (i + 1) + "</span><div><h3>" + esc(o.t) + "</h3><p>" + esc(o.b) + '</p><div class="tags">' + (o.tags || []).map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join("") + "</div></div></div>"; }).join("") + "</div>"));
+  if (d.findings) add(sect("findings", "Findings", d.findings.length + " open", true, d.findings.map(function (f) { return '<article class="finding ' + esc(f.s) + '"><header><span class="pill ' + esc(f.s) + '">' + esc(f.tag) + "</span><h3>" + esc(f.t) + "</h3></header>" + list(f.b) + "</article>"; }).join("")));
+  if (d.space) add(sect("space", "Disk space", "links counted once", true, (d.space.drives || []).map(function (r) {
+    var parts = r.parts || [], named = parts.reduce(function (a, p) { return a + p.gb; }, 0), other = Math.max(0, r.total - r.free - named);
+    return '<div class="drive"><header><b>' + esc(r.name) + " " + esc(r.note || "") + "</b><span>" + esc(r.free) + " GB free of " + esc(r.total) + ' GB</span></header><div class="stack">' + parts.map(function (p) { return '<span class="' + esc(p.s || "info") + '" title="' + esc(p.l) + " " + esc(p.gb) + ' GB" style="flex:' + Number(p.gb) + ' 0 0"></span>'; }).join("") + (other ? '<span class="other" title="Other" style="flex:' + other + ' 0 0"></span>' : "") + '<span class="free" title="Free" style="flex:' + Number(r.free) + ' 0 0"></span></div><div class="tags">' + parts.map(function (p) { return '<span class="pill ' + esc(p.s || "info") + '">' + esc(p.l) + " " + esc(p.gb) + " GB</span>"; }).join("") + "</div></div>"; }).join("") + "<div>" + (d.space.items || []).map(function (i) { return '<div class="item"><span class="gb">' + esc(i.gb) + '</span><span class="what">' + esc(i.what) + "<small>" + esc(i.where) + '</small></span><span class="pill ' + esc(i.s) + '">' + esc(i.tag) + "</span></div>"; }).join("") + "</div>"));
+  if (d.results) add(sect("results", "Before and after", "", true, '<div class="tw"><table><thead><tr><th>Metric</th><th>Before</th><th>Now</th><th>Change</th></tr></thead><tbody>' + d.results.map(function (r) { return "<tr>" + r.map(function (c, i) { return "<td>" + (i ? esc(c) : "<b>" + esc(c) + "</b>") + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table></div>"));
+  if (d.network) add(sect("network", "Network", d.network.note || "", false, '<div class="path">' + d.network.hops.map(function (h) { return '<div class="hop"><b>' + esc(h.b) + "</b><small>" + esc(h.s) + "</small></div>"; }).join("") + "</div>" + list(d.network.bullets)));
+  if (d.market) { var mk = d.market; add(sect("market", "Market value", mk.note || "", false, "<p>" + esc(mk.verdict) + '</p><div class="tier">' + mk.tiers.map(function (x, i) { return "<span" + (i <= mk.tier ? ' class="on"' : "") + "></span>"; }).join("") + '</div><div class="tiers">' + mk.tiers.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" + list(mk.bullets) + (mk.sources && mk.sources.length ? '<p class="eyebrow">Sources: ' + mk.sources.map(function (s) { return /^https?:/.test(s.u) ? '<a href="' + esc(s.u) + '">' + esc(s.t) + "</a>" : esc(s.t); }).join(" · ") + "</p>" : ""))); }
+  if (d.spec) add(sect("machine", "Machine", "", false, '<dl class="spec">' + d.spec.map(function (r) { return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>"));
+  if (d.cleared) add(sect("cleared", "Checked and clear", d.cleared.length + " items", false, d.cleared.map(function (c) { return "<div><h3>" + esc(c.t) + "</h3><p>" + esc(c.b) + "</p></div>"; }).join("")));
+  if (d.protected) add('<p class="foot">' + esc(d.protected) + "</p>");
+
+  var n = document.getElementById("nav");
+  n.innerHTML = nav.map(function (x) { return '<a href="#' + x[0] + '">' + esc(x[1]) + "</a>"; }).join("") + '<button type="button" id="all">Expand all</button>';
+  // A jump link opens its section.
+  n.addEventListener("click", function (e) { var h = e.target.getAttribute && e.target.getAttribute("href"); if (h) document.querySelector(h).open = true; });
+  document.getElementById("all").addEventListener("click", function () {
+    var ds = [].slice.call(document.querySelectorAll("details")), o = ds.some(function (x) { return !x.open; });
+    ds.forEach(function (x) { x.open = o; }); this.textContent = o ? "Collapse all" : "Expand all";
+  });
+})();
+</script>
+</body>
+</html>

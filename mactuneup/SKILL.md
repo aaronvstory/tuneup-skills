@@ -431,7 +431,7 @@ The page puts `vitals`, `offers`, `findings`, and `space` first. Network, market
 2. **`vitals`:** CPU heat, CPU speed, memory, main disk, internet, background load. Measured values only.
 3. **`spec`:** model, CPU, GPU, memory, OS, storage, uptime.
 4. **`market`:** how good this machine is today. See *Market check*.
-5. **`space`:** each drive as a bar and the largest items, each with the offer that goes with it.
+5. **`space`:** every mounted volume, internal and external, with a ranked list of its top 10 or so items as `{ "l", "n", "gb", "s" }`. `items` holds only the ones with an offer.
 6. **`network`:** the hops in order, then speed, Wi-Fi, DNS, loss, tunnels, and open remote access.
 7. **`findings`:** ordered by severity, 3 bullets at most: what, evidence, cost.
 8. **`results`:** only after a change. Keep rows that did not improve.

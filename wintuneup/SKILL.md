@@ -226,11 +226,14 @@ These exist because each one has already caught a wrong diagnosis.
   Read `AntivirusSignatureLastUpdated`, `AntivirusSignatureVersion` and
   `DefenderSignaturesOutOfDate` together before drawing any conclusion about protection.
   An age of `65535` is the "never successfully updated" sentinel, not 179 years.
-- **Never clear `%TEMP%` without excluding `%TEMP%\claude\`.** the agent keeps live
-  session state there — tool output files, scratchpads, task records. A blanket wipe
-  deletes the running agent's own working directory mid-run, and the next tool call
-  fails with `ENOENT`. Filter `claude` and `.claude` out of the delete list. The same
-  caution applies to anything else holding state under temp.
+- **Never purge `%TEMP%` by file age.** Apps keep live data there, and an old file is not an unused file.
+  - On one PC, a 7-day purge removed idle binaries from a running app's unpacked folder, so the app could not stream.
+  - The same purge deleted the app's saved settings, which were last written weeks earlier.
+  - List the top-level folders with size and newest file date. Offer each folder as a pick. Never recurse with a date filter.
+  - Never offer `claude`, `.claude`, or a folder that holds the `Path` of a running process (`Get-Process`).
+  - Never offer a folder named after an installed app until you know it holds only cache. Search the app's source or logs for that path.
+  - Write the full delete list to the backup folder first, so the user can see what went.
+  - Say that a restore point can bring back a file. Check that one exists before the delete.
 - **`Update-MpSignature` returns success without doing anything when a policy blocks
   the AV component.** Never report a definition update as applied off the cmdlet's exit
   alone. Verify with `MpCmdRun.exe -SignatureUpdate`, which prints the real engine and

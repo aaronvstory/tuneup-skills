@@ -186,6 +186,7 @@ report a service as retired without that second check.
   Delete one item, measure `df`, then extrapolate. Also, when user-visible `du` totals fall
   far short of the volume's `Volume Used Space`, the gap is root-only dirs or snapshots;
   measure it with a root `du -xhd1 /System/Volumes/Data` before naming a cause.
+- **Never purge temp or cache folders by file age.** Apps keep live data there, and an old file is not an unused file. List each top-level folder with size and newest file date, and offer it as a pick. Never offer a folder that holds the path of a running process, or one named after an installed app until you know it holds only cache.
 - **Measure disk with BOTH numbers, always.** `df` free space and
   `diskutil info / | grep "Container Free Space"` disagree whenever an APFS snapshot
   pins deleted files, and on a machine taking hourly local snapshots that is *most of

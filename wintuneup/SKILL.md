@@ -265,7 +265,10 @@ Heat and thermal limits hide from Task Manager. Read them yourself. Never ask th
 - **Compare with a fresh boot.** `CPU_SPEED_PCT` high after boot and low after 30 minutes points to heat build-up.
 - **`FANS_FOUND=0` means the sensor is not exposed.** Some laptops hide fan speed. It does not mean a dead fan. Listen for the fan.
 - **Check the GPU state.** Top P-state at about 0% use adds steady heat on a shared cooler. Find the holder before you blame it.
-- **Check the power plan on a laptop.** Ultimate Performance holds a 100% minimum CPU state on AC, so cores do not rest. On one test laptop, Balanced took the CPU from 101°C at 61 W to 91°C at 42 W in 3 minutes, with lighter load at the same time. Offer the switch, and measure before and after.
+- **Never switch the power plan to cut heat without measuring clocks under load.** A lower temperature can come from a clock lock, not from better cooling.
+  - On one laptop, Balanced locked an AMD CPU at 2.0 GHz under full load (32 W, 75°C). Ultimate Performance ran it at 4.4 GHz (82 W). The 10°C drop that Balanced gave was the lock, and benchmark scores fell by half.
+  - Measure with an all-core load and read the core ratio or effective clock (HWiNFO), on both plans, before you offer a switch.
+  - Ultimate Performance also turns off CPU idle (`IDLEDISABLE=1`), which adds idle heat. Turning idle back on (`powercfg /setacvalueindex <plan> SUB_PROCESSOR IDLEDISABLE 0`) kept full boost on that laptop.
 - **Fix order.** Clear the vents, clean the fans and fins, then consider a repaste. Warn that some laptops use liquid metal, so a repaste can be a repair-shop job.
 
 ## Disk space — account for every GB
